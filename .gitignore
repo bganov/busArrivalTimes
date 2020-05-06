@@ -1,0 +1,5 @@
+# Ignore .vscode
+.vscode
+
+# Skip node modules folder
+node_modules
