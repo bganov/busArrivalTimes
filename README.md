@@ -26,11 +26,3 @@ Runs the WebSocket server.  This is also the main business logic for calculating
 ### `yarn runBoth`
 
 Runs the WebSocket server and kickstarts the ReactSPA. This the expected method of running both on a local host and inspect functionality. 
-
-
-
-### `yarn test`
-
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
