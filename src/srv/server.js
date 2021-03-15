@@ -1,6 +1,4 @@
-const io = require("socket.io")(httpServer, {
-     origins: ["https://localhost", "http://localhost", "http://localhost:1337", "ws://localhost:1337"]
-});
+const io = require("socket.io")();
 const PORT = 1337
 const DISTANCE_BETWEEN_STOPS = 2
 const BUS_LINE_NEXT_CAR = 15;
@@ -42,7 +40,9 @@ io.on('connection', (socket) => {
         calculateArrivalTimes(socket, request);
     });
 });
-  
+
+
+io.origins(["http://localhost:3000", "*"]);
 io.listen(PORT);
 console.log('Listening on port ' + PORT + '...')
   
