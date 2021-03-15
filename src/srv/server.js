@@ -1,8 +1,5 @@
 const io = require("socket.io")(httpServer, {
-  cors: {
-    origin: "https://localhost:3000",
-    methods: ["GET", "POST"]
-  }
+     origins: ["https://localhost", "http://localhost", "http://localhost:3000", "http://localhost:1337"]
 });
 const PORT = 1337
 const DISTANCE_BETWEEN_STOPS = 2
