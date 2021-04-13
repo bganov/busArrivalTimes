@@ -32,7 +32,7 @@ function App() {
   const [ stopOne, setStopOne ] = useState('')
   const [ stopTwo, setStopTwo ] = useState('')
   const [ intervalId, setIntervalId ] = useState();
-  const socket = openSocket('ws://localhost:1337');
+  const socket = openSocket('ws://192.168.86.86:1337');
   
   socket.on('updatedArrivalTimes', (response) => { 
     
