@@ -49,7 +49,7 @@ io.on('connection', (socket) => {
 });
 
 
-io.origins(["http://localhost:3000", "*"]);
+io.origins(["http://localhost:3000", "http://192.168.86.86:1337", "http://192.168.86.86:3000", "*"]);
 io.listen(PORT);
 console.log('Listening on port ' + PORT + '...')
   
