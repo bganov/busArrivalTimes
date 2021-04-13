@@ -1,7 +1,7 @@
 const io = require("socket.io")(null, 
   { 
     cors: {
-        origin: "https://example.com",
+        origin: "localhost:3000",
         methods: ["GET", "POST"]
     }
   });
