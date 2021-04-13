@@ -1,8 +1,11 @@
-const io = require("socket.io")(null, cors: {
-    origin: "https://example.com",
-    methods: ["GET", "POST"]
-  }
-});
+const io = require("socket.io")(null, 
+  { 
+    cors: {
+        origin: "https://example.com",
+        methods: ["GET", "POST"]
+    }
+  });
+    
 const PORT = 1337
 const DISTANCE_BETWEEN_STOPS = 2
 const BUS_LINE_NEXT_CAR = 15;
