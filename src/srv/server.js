@@ -1,4 +1,11 @@
-const io = require("socket.io")();
+const io = require("socket.io")(null, 
+  { 
+    cors: {
+        origin: "localhost:3000",
+        methods: ["GET", "POST"]
+    }
+  });
+    
 const PORT = 1337
 const DISTANCE_BETWEEN_STOPS = 2
 const BUS_LINE_NEXT_CAR = 15;
@@ -42,7 +49,7 @@ io.on('connection', (socket) => {
 });
 
 
-io.origins(["http://localhost:3000", "*"]);
+io.origins(["http://localhost:3000", "http://192.168.86.86:1337", "http://192.168.86.86:3000", "*"]);
 io.listen(PORT);
 console.log('Listening on port ' + PORT + '...')
   
