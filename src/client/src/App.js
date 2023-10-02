@@ -25,14 +25,14 @@ const useStyles = makeStyles((theme) => ({
 
 function App() {
 
-  const REQUEST_INTERVAL = 1000 * 60; //can be exported to an ENV VAR
+  const REQUEST_INTERVAL = 1000 * 12; //can be exported to an ENV VAR (in milliseconds)
   const classes = useStyles();
-  const [ busStop, setBusStop ] = useState();
-  const [ busTimes, setBusTimes ] = useState('');
-  const [ stopOne, setStopOne ] = useState('')
-  const [ stopTwo, setStopTwo ] = useState('')
-  const [ intervalId, setIntervalId ] = useState();
-  const socket = openSocket.connect('http://192.168.86.86:1337/');
+  const [ busStop, setBusStop ] = useState(Number)
+  const [ busTimes, setBusTimes ] = useState(String)
+  const [ stopOne, setStopOne ] = useState(String)
+  const [ stopTwo, setStopTwo ] = useState(String)
+  const [ intervalId, setIntervalId ] = useState(Number);
+  let socket = openSocket.connect('ws://localhost:1337/');
   
   socket.on('updatedArrivalTimes', (response) => { 
     
@@ -71,35 +71,57 @@ function App() {
   
   const requestStopTimes = () => {
 
+    if(socket && socket.disconnected){
+      socket = openSocket.connect('ws://localhost:1337/')
+    }
+
     cancelRequest(); // Clear an existing/running interval
-    // Initial times request...
-    socket.emit('requestTimes', {busStops: [1, 2, Number.parseInt(busStop)], requestedTimestamp: new Date()}) 
+    var data = [1,2];
+    var requested = Number.parseInt(busStop);
     
+    if(!isNaN(requested) && requested > 0)
+     data.push(requested);
+    
+    // Initial times request...
+    socket.emit('requestTimes', {busStops: data, requestedTimestamp: new Date()})  
+    console.log('Interval callback executing...'+ new Date(Date.now()).toLocaleString())
+
     // Schedule minutely request and save it's Id
     let id =  setInterval((data) => {
-      socket.emit('requestTimes', {busStops: data, requestedTimestamp: new Date()}) 
-    }, REQUEST_INTERVAL, [1, 2, Number.parseInt(busStop)])
-    setIntervalId(id);
+      socket.emit('requestTimes', {busStops: data, requestedTimestamp: new Date()})
+      var dateTime = new Date();
+      dateTime.setTime(Date.now())
+      console.log('Interval callback executing...'+ new Date(Date.now()).toLocaleString())
+    }, REQUEST_INTERVAL, data)
+     
+    setIntervalId(id || -1);
+
   }
 
   const cancelRequest = () => {
     // Cancel currently running request/interval and remove the prior arrival times 
     if(intervalId){
         clearInterval(intervalId);
-        setIntervalId(undefined);
-      }
-      // Clear the hooks' data
-      setBusTimes('')
-      setStopOne('')
-      setStopTwo('')
+        document.getElementById('stopNumber').value = '';
+        setBusStop(''); 
+        // Clear the hooks' data
+        setBusTimes('')
+        setStopOne('')
+        setStopTwo('')
+        setIntervalId(-1)
+      
+    }
+     
   }
   
   const handleChange = (evt) =>  {
     evt.preventDefault();
     var value = Number.parseInt(evt.target.value)
-    if(!isNaN(value) && value >= 3 && value <=10) {
+    if( !isNaN(value) && value < 11 ) {
+      if( value >= 3)
         setBusStop(evt.target.value);
     } else {
+      setBusStop(NaN);
       return evt.target.value = '';
     }
   }
@@ -115,6 +137,7 @@ function App() {
           <Box mx="auto" bgcolor="background.paper" p={0} component="div" m={1}>Bus Arrival Times for:</Box>
           <Box mx="auto" bgcolor="background.paper" p={1} component="div" m={1} width={1}>
                 <TextField
+                  id='stopNumber'
                   autoFocus={true}
                   color={'primary'}
                   required={true}
