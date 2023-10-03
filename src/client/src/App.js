@@ -9,6 +9,12 @@ import {
 } from '@material-ui/core';
 import openSocket from 'socket.io-client';
 
+// For single host origin use 'localhost'
+// Make sure that is mapped inside your hostnames
+var HOST  = 'localhost'
+
+// For WS host other than locallhost use appropriate value
+//var HOST = '192.168.86.29'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -32,7 +38,7 @@ function App() {
   const [ stopOne, setStopOne ] = useState(String)
   const [ stopTwo, setStopTwo ] = useState(String)
   const [ intervalId, setIntervalId ] = useState(Number);
-  let socket = openSocket.connect('ws://localhost:1337/');
+  let socket = openSocket.connect('ws://' + HOST + ':1337/');
   
   socket.on('updatedArrivalTimes', (response) => { 
     
@@ -72,7 +78,7 @@ function App() {
   const requestStopTimes = () => {
 
     if(socket && socket.disconnected){
-      socket = openSocket.connect('ws://localhost:1337/')
+      socket = openSocket.connect('ws://' + HOST + ':1337/')
     }
 
     cancelRequest(); // Clear an existing/running interval
