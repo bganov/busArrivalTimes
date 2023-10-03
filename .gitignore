@@ -5,6 +5,9 @@
 # Skip node modules folder
 node_modules
 
-#Skip MacOS index file
+# Skip MacOS index file
 .DS_Store
 */.DS_Store
+
+# Skip Yarn Lock
+yarn.lock
