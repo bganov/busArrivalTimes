@@ -41,7 +41,7 @@ function App() {
   const [ busTimes, setBusTimes ] = useState(String)
   const [ stopOne, setStopOne ] = useState(String)
   const [ stopTwo, setStopTwo ] = useState(String)
-  const [ intervalId, setIntervalId ] = useState(Number)
+  const [ intervalId, setIntervalId ] = useState(-1)
 
   const socket = io('http://' + HOST + ':1337/');
 
@@ -96,26 +96,26 @@ function App() {
     socket.emit('requestTimes', {busStops: data, requestedTimestamp: new Date()})  
 
     // Schedule request per REQUEST_INTERVAL and save it's Id
-    let id =  setInterval((data) => {
+    setIntervalId(setInterval((data) => {
       var dateTime = new Date();
       dateTime.setTime(Date.now())
       socket.emit('requestTimes', {busStops: data, requestedTimestamp: dateTime})
-    }, REQUEST_INTERVAL, data)
+    }, REQUEST_INTERVAL, data) || -1);
      
-    setIntervalId(id || -1);
-
+    document.getElementById('stopNumber').dispatchEvent(new Event("onClick"))
   }
 
   const cancelRequest = (clearInputField) => {
     // Cancel currently running request/interval and remove the prior arrival times 
     if(intervalId){
         clearInterval(intervalId);
+        setIntervalId('');
         setBusStop(''); 
         // Clear the hooks' data
         setBusTimes('')
         setStopOne('')
         setStopTwo('')
-        setIntervalId(-1)
+        
     }
     if(clearInputField){
       setBusStop('');
