@@ -6,6 +6,7 @@
   "author": "Borislav Ganov",
   "license": "MIT",
   "private": false,
+  "type": "module",
   "scripts": {
     "initUpdate": "(cd src/client &&  yarn)  & yarn",
     "runServer": "node src/srv/server.js",
@@ -16,7 +17,7 @@
   },
   "dependencies": {
     "express": "^4.17.3",
-    "socket.io": "^2.4.0",
+    "socket.io": "^3.0.0",
     "uuid": "^8.0.0"
   }
 }

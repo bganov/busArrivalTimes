@@ -1,22 +1,21 @@
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 const PORT = 1337
 const DISTANCE_BETWEEN_STOPS = 2
 const BUS_LINE_NEXT_CAR = 15;
-
-var http  = require("http");
-var Server =  require("socket.io");
-
-const httpServer = http.createServer();
+const httpServer = createServer();
 const io = new Server(httpServer, {
+    headers: {
+        "Access-Control-Allow-Origin":"*"
+    },
     cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
+        origin: ["http://localhost:3000", "http://192.168.86.29:3000"]
     }
 });
   
 // Used in calculation of arrival times.
 const busLineMinutesOffset = [ -2, 0, 2 ];
-
 
 const calculateArrivalTimes = (socket, request) => {
     
@@ -40,18 +39,17 @@ const calculateArrivalTimes = (socket, request) => {
         }
     });
     socket.emit("updatedArrivalTimes", allStopsTimes)
-    
 }
 
 io.on('connection', (socket) => {
     socket.on('requestTimes', (request) => { 
         calculateArrivalTimes(socket, request);
     });
+    socket.on("disconnect", (reason) => {
+        console.log('Connection Disconnected with ' + socket.client.id + " Reason: "+ reason.toString());
+      });
 });
 
-// io.origins(["http://localhost:1337", "ws://localhost:3000", "http://localhost:3000", "ws://::1337", "http://::1337", "*"]);
-io.origins([ "http://192.168.86.23:3000", "http://localhost:3000",  "http://192.168.86.23:1337", "http://localhost:1337"]);
-
-io.listen(PORT);
+httpServer.listen(PORT);
 console.log('Listening on port ' + PORT + '...')
   
