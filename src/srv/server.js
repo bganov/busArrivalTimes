@@ -6,9 +6,6 @@ const DISTANCE_BETWEEN_STOPS = 2
 const BUS_LINE_NEXT_CAR = 15;
 const httpServer = createServer();
 const io = new Server(httpServer, {
-    headers: {
-        "Access-Control-Allow-Origin":"*"
-    },
     cors: {
         origin: ["http://localhost:3000", "http://192.168.86.29:3000"]
     }
