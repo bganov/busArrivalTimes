@@ -9,7 +9,7 @@ import {
 import openSocket from 'socket.io-client';
 
 const REQUEST_INTERVAL = 1000 * 10; // can be exported to an ENV VAR or configuration
-const BACKEND_HOST_SOCKET = "localhost:1337";// can be exported to an ENV VAR or configuration
+const BACKEND_HOST_SOCKET = "localhost:3131";// can be exported to an ENV VAR or configuration
 const useStyles = makeStyles((theme) => ({
   root: {
     '& > *': {

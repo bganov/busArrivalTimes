@@ -1,11 +1,11 @@
+
 import { createServer } from "http";
 import { Server } from "socket.io";
 
-const PORT = 1337;
+const PORT = 3131;
 const HOST = 'localhost';
 const DISTANCE_BETWEEN_STOPS = 2
 const BUS_LINE_NEXT_CAR = 15;
-const log = (data) => {console.log(data)}
 
 const http_options = {
         cors: {
