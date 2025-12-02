@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { 
   Box, 
@@ -7,19 +6,10 @@ import {
   TextField, 
   ButtonGroup
 } from '@material-ui/core';
+import openSocket from 'socket.io-client';
 
-//import openSocket from 'socket.io-client';
-import { io } from "socket.io-client";
-
-
-// For single host origin use 'localhost'
-// Make sure that is mapped inside your hostnames
-//var HOST  = 'localhost'
-
-// For WS host other than local host use appropriate value 
-// update according the WS server IP and update the Server origins if needed
-var HOST = '192.168.86.29'
-
+const REQUEST_INTERVAL = 1000 * 10; // can be exported to an ENV VAR or configuration
+const BACKEND_HOST_SOCKET = "localhost:3131";// can be exported to an ENV VAR or configuration
 const useStyles = makeStyles((theme) => ({
   root: {
     '& > *': {
@@ -30,34 +20,53 @@ const useStyles = makeStyles((theme) => ({
     '& > *': {
       margin:  theme.spacing(1),
     },
-}
+  },
+  TextField: {
+    '& > *': {
+      margin:  theme.spacing(1),
+    },
+    width: 'calc(20% - 50px)',
+  },
 }));
+
+// Consider passing the URL/hostname/IP of server via env var or settings...
+const socket = openSocket.connect(BACKEND_HOST_SOCKET, {
+      extraHeaders: ["Access-Control-Allow-Origin: 'localhost:3000'"],
+      });
 
 function App() {
 
-  const REQUEST_INTERVAL = 1000 * 12; //can be exported to an ENV VAR (in milliseconds)
   const classes = useStyles();
-  const [ busStop, setBusStop ] = useState('')
-  const [ busTimes, setBusTimes ] = useState(String)
-  const [ stopOne, setStopOne ] = useState(String)
-  const [ stopTwo, setStopTwo ] = useState(String)
-  const [ intervalId, setIntervalId ] = useState(-1)
+  var [ busStop, setBusStop ] = useState();
+  const [ busTimes, setBusTimes ] = useState();
+  const [ stopOne, setStopOne ] = useState();
+  const [ stopTwo, setStopTwo ] = useState();
+  const [ intervalId, setIntervalId ] = useState();
+  const [ currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
+  const [ lastUpdated, setLastUpdated] = useState();
 
-  const socket = io('http://' + HOST + ':1337/');
+  setInterval(() => {
+    setCurrentTime(new Date().toLocaleTimeString());
+  }, 1000);
 
-  socket.on('updatedArrivalTimes', (response) => { 
+  useEffect(() => {
+    setBusStop(busStop);
+    setCurrentTime(new Date().toLocaleTimeString());
+
+    socket.on('updatedArrivalTimes', (response) => { 
     
     if(Array.isArray(response)){
         response.forEach(  (val, idx, arry) => {
+       
           if(idx < 2){
             if(Array.isArray(val)){
               var times = `Stop ${idx+1}:` 
               times += '\n' 
-              times += `Route 1 in ${val[0].incoming} mins and ${val[0].following} mins`
+              times += `Route 1 in under ${val[0].incoming} mins and under ${val[0].following} mins`
               times += '\n'
-              times += `Route 2 in ${val[1].incoming} mins and ${val[1].following} mins`
+              times += `Route 2 in under ${val[1].incoming} mins and under ${val[1].following} mins`
               times += '\n'
-              times += `Route 3 in ${val[2].incoming} mins and ${val[2].following} mins`
+              times += `Route 3 in under ${val[2].incoming} mins and under ${val[2].following} mins`
             }
             if(idx === 0) 
               setStopOne(times)
@@ -66,75 +75,91 @@ function App() {
           } 
 
           if(idx === 2){
-            times = `Stop ${busStop}:` 
+            times = `Stop ${busStop ? busStop : 3}:` 
             times += '\n' 
-            times += `Route 1 in ${val[0].incoming} mins and ${val[0].following} mins`
+            times += `Route 1 in under ${val[0].incoming} mins and under ${val[0].following} mins`
             times += '\n'
-            times += `Route 2 in ${val[1].incoming} mins and ${val[1].following} mins`
+            times += `Route 2 in under ${val[1].incoming} mins and under ${val[1].following} mins`
             times += '\n'
-            times += `Route 3 in ${val[2].incoming} mins and ${val[2].following} mins`
+            times += `Route 3 in under ${val[2].incoming} mins and under ${val[2].following} mins`
 
-            setBusTimes(times);
+           setBusTimes(times);
           }
         })
-    }
-  });
+        setLastUpdated(new Date().toLocaleTimeString());
+      }
+      else{
+        setBusTimes();
+      }
+    });
+  }, [busStop]);
+
   
   const requestStopTimes = () => {
 
-    cancelRequest(false); // Clear an existing/running interval
-    var data = [1,2]; // Default stops always requested
+    cancelRequest(); // Clear an existing/running interval 
     
-    var requested = Number.parseInt(busStop);
-    if( !isNaN(requested) && requested < 11 && requested >= 3) {
-        setBusStop(requested);
-        data.push(requested);
-    } else {
-      setBusStop('');
-    }
-    // Initial times request...
-    socket.emit('requestTimes', {busStops: data, requestedTimestamp: new Date()})  
+    var userChoice = Number.parseInt(busStop);
+    if (Number.isNaN(userChoice)) {
+      // Initial times request...
+      socket.emit('requestTimes', {busStops: [1, 2], requestedTimestamp: new Date()})
+      setIntervalId(
+        setInterval((data) => {
+        socket.emit('requestTimes', {busStops: data, requestedTimestamp: new Date()}) 
+      }, REQUEST_INTERVAL, [1, 2])
+      );
 
-    // Schedule request per REQUEST_INTERVAL and save it's Id
-    setIntervalId(setInterval((data) => {
-      var dateTime = new Date();
-      dateTime.setTime(Date.now())
-      socket.emit('requestTimes', {busStops: data, requestedTimestamp: dateTime})
-    }, REQUEST_INTERVAL, data) || -1);
-     
-    document.getElementById('stopNumber').dispatchEvent(new Event("onClick"))
+      return;
+    }
+
+    if (!Number.isNaN(userChoice)) {  
+      setBusStop(userChoice);
+      socket.emit('requestTimes', {busStops: [1, 2, busStop], requestedTimestamp: new Date()}) 
+      // Schedule minutely request and save it's Id
+      setIntervalId(
+        setInterval((data) => {
+          socket.emit('requestTimes', {busStops: data, requestedTimestamp: new Date()}) 
+        }, REQUEST_INTERVAL, [1, 2, Number.parseInt(busStop)])
+      );
+    }    
   }
 
-  const cancelRequest = (clearInputField) => {
+  const cancelRequest = () => {
     // Cancel currently running request/interval and remove the prior arrival times 
     if(intervalId){
-        clearInterval(intervalId);
-        setIntervalId('');
-        setBusStop(''); 
-        // Clear the hooks' data
-        setBusTimes('')
-        setStopOne('')
-        setStopTwo('')
-        
+      clearInterval(intervalId);
+      setIntervalId(undefined);  
     }
-    if(clearInputField){
-      setBusStop('');
-    }
+    // Clear the hooks' data 
+    setBusTimes()
+    setStopOne()
+    setStopTwo()
   }
   
   const handleChange = (evt) =>  {
-    evt.preventDefault();
-    setBusStop(evt.target.value);
+    //evt.preventDefault();
+    let value = Number.parseInt(evt.target.value)
+    if(!isNaN(value)) {
+      if(value >= 3 && value <= 10){
+        setBusStop(value);
+      }
+      else{
+        setBusStop();
+      }
+    }
+  }
+ 
+  const selectAll = (evt) => {
+    //evt.preventDefault();
+    evt.target.select();
   }
 
-  const handleEnterKey = (evt) => {
-    if(evt.key === 'Enter'){
-      requestStopTimes(false)
+  const printLastUpdated = () => {
+    if(intervalId){
+      var suffix = lastUpdated || "No data requested yet";
+      return "Last updated at: " + suffix;
     }
-  } 
-  const selectAll = (evt) => {
-    evt.preventDefault();
-    evt.target.select();
+    return '';
   }
 
   return (
@@ -142,18 +167,17 @@ function App() {
       <Box component="div" m={2}>
           <Box mx="auto" bgcolor="background.paper" p={0} component="div" m={1}>Bus Arrival Times for:</Box>
           <Box mx="auto" bgcolor="background.paper" p={1} component="div" m={1} width={1}>
-                <TextField
-                  id='stopNumber'
+                <TextField className={classes.TextField}
+                  id='userInput'
                   autoFocus={true}
                   color={'primary'}
                   required={true}
                   label="Bus Stop Number [3-10]" 
                   variant="outlined" 
                   size="small"
-                  value={busStop}
-                  onClick={ (evt) => selectAll(evt) }
-                  onKeyPress={ (evt) => handleEnterKey(evt) }
-                  onChange={ (evt) => handleChange(evt) }
+                  onChange = { (evt) => handleChange(evt)}
+                  onBlur = { (evt) => handleChange(evt)}
+                  onClick={  (evt) => selectAll(evt) }
                 />
               <br/><br/>
               <ButtonGroup  width={1/6}  padding={100}>
@@ -162,23 +186,24 @@ function App() {
                 variant="contained" 
                 color="primary"
                 size="small" 
-                onClick={() => requestStopTimes(false)}>Get Arrival Times
+                onClick={() => requestStopTimes()}>Get Arrival Times
               </Button>
               <Button className={classes.ButtonElement}
                 name="cancel"
                 variant="contained" 
                 color="primary"
                 size="small" 
-                onClick={() => cancelRequest(true)}>Cancel
+                onClick={() => cancelRequest()}>Cancel
               </Button>
               </ButtonGroup>
           </Box>
           <Box width={1/4}>  
-             <pre>As of {new Date(Date.now()).toLocaleString()}</pre>
              <pre>
+               Current local time: {currentTime}<br/><br/>
                {stopOne}<br/><br/>
                {stopTwo}<br/><br/>
-               {busTimes}
+               {busTimes}<br/><br/>
+               {printLastUpdated()}
              </pre>
           </Box>
       </Box>
