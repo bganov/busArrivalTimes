@@ -2,21 +2,24 @@
   "name": "bus-schedule-info",
   "version": "1.0.0",
   "description": "Homework task - backend svc for bus schedules with FE page showing arrival times for specified bus stop",
-  "main": "src/srv/index.js",
+  "main": "src/srv/server.js",
   "author": "Borislav Ganov",
   "license": "MIT",
   "private": false,
+  "type": "module",
   "scripts": {
     "initUpdate": "(cd src/client &&  yarn)  & yarn",
     "runServer": "node src/srv/server.js",
     "runClient": "(cd src/client && yarn start)",
     "runBoth": "yarn runServer & (cd src/client && yarn start)",
-    "debug": "node --nolazy --inspect-brk=9229 src/srv/index.js",
+    "dev-debug": "node --nolazy --inspect-brk=9229 src/srv/server.js",
     "purge": "rm -rf node_modules src/client/node_modules"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "esm": "^3.2.25",
     "express": "^4.17.1",
-    "socket.io": "^2.4.0",
+    "socket.io": "^4.1.1",
     "uuid": "^8.0.0"
   }
 }
